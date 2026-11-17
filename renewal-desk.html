@@ -1,0 +1,393 @@
+<title>Renewal Desk</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: a working desk. Summary line, deadline bars by month, then the contract ledger, then the board memo. */
+:root {
+  --bg: #f4f6f9; --surface: #ffffff; --ink: #141b2b; --muted: #5a6478; --line: #d9dee8;
+  --accent: #2f4b9c; --accent-ink: #ffffff;
+  --cut: #b3261e; --cut-bg: #fbe9e7; --reneg: #8a5a00; --reneg-bg: #fdf1d6;
+  --keep: #1c6b45; --keep-bg: #e2f3ea; --unk: #4a5568; --unk-bg: #e8ebf0;
+  --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --body: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10141d; --surface: #181e2b; --ink: #e8ecf4; --muted: #9aa5ba; --line: #2c3547;
+  --accent: #8ea6f0; --accent-ink: #10141d;
+  --cut: #ff9a90; --cut-bg: #47201d; --reneg: #f2c462; --reneg-bg: #45350f;
+  --keep: #7fd6a6; --keep-bg: #163a28; --unk: #b4bdcd; --unk-bg: #2a3242; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #10141d; --surface: #181e2b; --ink: #e8ecf4; --muted: #9aa5ba; --line: #2c3547;
+  --accent: #8ea6f0; --accent-ink: #10141d;
+  --cut: #ff9a90; --cut-bg: #47201d; --reneg: #f2c462; --reneg-bg: #45350f;
+  --keep: #7fd6a6; --keep-bg: #163a28; --unk: #b4bdcd; --unk-bg: #2a3242; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+h1, h2 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; }
+h1 { font-size: 30px; letter-spacing: -0.01em; }
+h2 { font-size: 19px; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+
+.top { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end; }
+.top p { max-width: 60ch; }
+.fields { display: flex; flex-wrap: wrap; gap: 12px; }
+label.f { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+input[type="text"], input[type="number"] { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; width: 190px; max-width: 100%; }
+input[type="number"] { width: 110px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.banner { font-size: 13px; padding: 8px 12px; border: 1px dashed var(--line); border-radius: 6px; color: var(--muted); }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.stat { padding: 16px 18px; border-right: 1px solid var(--line); min-width: 0; }
+.stat:last-child { border-right: 0; }
+.stat .k { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.stat .v { font-family: var(--display); font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .s { font-size: 13px; color: var(--muted); }
+@media (max-width: 620px) { .stat { border-right: 0; border-bottom: 1px solid var(--line); } .stat:last-child { border-bottom: 0; } }
+
+section { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.sechead { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: baseline; }
+
+.months { display: grid; grid-template-columns: repeat(12, minmax(48px, 1fr)); gap: 6px; align-items: end; height: 170px; min-width: 640px; }
+.scroll { overflow-x: auto; }
+.mo { display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; height: 100%; gap: 4px; text-align: center; font-size: 12px; }
+.mo .amt { color: var(--muted); font-variant-numeric: tabular-nums; }
+.mo .bar { background: var(--accent); border-radius: 3px 3px 0 0; min-height: 0; }
+.mo .bar.none { background: var(--line); height: 2px; }
+.mo .lbl { border-top: 1px solid var(--line); padding-top: 4px; color: var(--muted); }
+.mo.now .lbl { color: var(--ink); font-weight: 600; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+button { font: inherit; cursor: pointer; }
+.chipbtn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+.chipbtn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn { border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); border-radius: 6px; padding: 7px 14px; font-weight: 500; }
+.btn.ghost { background: transparent; color: var(--accent); }
+
+.tablebox { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 14px; }
+th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.r, th.r { text-align: right; }
+.prod { font-weight: 600; }
+.sub { font-size: 12.5px; color: var(--muted); }
+.use { display: flex; flex-direction: column; gap: 4px; min-width: 120px; }
+.track { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.fill { height: 100%; background: var(--muted); }
+.pill { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 4px; padding: 2px 8px; white-space: nowrap; }
+.pill.cut { color: var(--cut); background: var(--cut-bg); }
+.pill.reneg { color: var(--reneg); background: var(--reneg-bg); }
+.pill.keep { color: var(--keep); background: var(--keep-bg); }
+.pill.unk { color: var(--unk); background: var(--unk-bg); }
+.why { font-size: 12.5px; color: var(--muted); max-width: 34ch; margin-top: 4px; }
+.save { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.load { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.drop { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.drop code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12px; }
+.drop code { color: var(--muted); overflow-wrap: anywhere; }
+#status { font-size: 13px; }
+textarea { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.55; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; width: 100%; box-sizing: border-box; min-height: 320px; resize: vertical; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Renewal Desk</h1>
+      <p class="muted">Every software contract, the last day you can cancel it, and whether it earns its renewal.</p>
+    </div>
+    <div class="fields">
+      <label class="f" for="district">District<input id="district" type="text" value="Cedar Hollow School District"></label>
+      <label class="f" for="enroll">Enrollment<input id="enroll" type="number" min="1" value="1850"></label>
+    </div>
+  </header>
+
+  <div class="banner" id="banner">Showing example contracts for a made-up district. Load your own two files below to replace them. Nothing leaves this page.</div>
+
+  <div class="stats" id="stats"></div>
+
+  <section>
+    <div class="sechead"><h2>Dollars up for decision, by cancel-by month</h2><span class="muted" id="monthsNote"></span></div>
+    <div class="scroll"><div class="months" id="months"></div></div>
+  </section>
+
+  <section>
+    <div class="sechead">
+      <h2>Contract ledger</h2>
+      <div class="filters" id="filters"></div>
+    </div>
+    <div class="tablebox"><table>
+      <thead><tr><th>Product</th><th class="r">Annual cost</th><th>Licenses in use</th><th class="r">Per active user</th><th>Cancel by</th><th>Recommendation</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+    <p class="sub">Rules: under 25% of licenses in use is a cut. A tool under 40% that shares a category with a better-used tool is a cut. 25–70% is a renegotiation down to active users plus 15% headroom. 70% and above is a keep.</p>
+  </section>
+
+  <section>
+    <h2>Load your district's files</h2>
+    <div class="load">
+      <div class="drop">
+        <strong>1. Contracts CSV</strong>
+        <span class="sub">One row per contract, from your purchase orders or a spreadsheet.</span>
+        <code>product, vendor, category, annual_cost, licenses, renewal_date, notice_days, auto_renew</code>
+        <input id="contractsFile" type="file" accept=".csv,text/csv">
+      </div>
+      <div class="drop">
+        <strong>2. Usage CSV</strong>
+        <span class="sub">Active users in the last 90 days, from your sign-on portal or each vendor's dashboard.</span>
+        <code>product, active_users</code>
+        <input id="usageFile" type="file" accept=".csv,text/csv">
+      </div>
+    </div>
+    <p id="status" class="muted" role="status"></p>
+  </section>
+
+  <section>
+    <div class="sechead"><h2>Board memo</h2>
+      <div class="row"><button class="btn" id="copyMemo" type="button">Copy memo</button><span class="sub" id="copyNote"></span></div>
+    </div>
+    <textarea id="memo" readonly aria-label="Board memo text"></textarea>
+  </section>
+</div>
+
+<script>
+(function () {
+  var DAY = 86400000;
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  function addDays(d, n) { return new Date(d.getTime() + n * DAY); }
+  function iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+  // Example contracts. Renewal dates are offsets from today so the sample always has live deadlines.
+  var SAMPLE = [
+    ['ReadWell Literacy', 'Brightpath Learning', 'Literacy', 28500, 900, 212, 52, 60, true],
+    ['MathOrbit', 'Orbit Education', 'Math', 21600, 1200, 1010, 75, 60, true],
+    ['NumberNest', 'Kestrel Labs', 'Math', 9800, 600, 190, 110, 90, true],
+    ['ClassCanvas LMS', 'Canvasworks', 'Learning management', 34000, 1850, 1702, 228, 90, true],
+    ['QuizForge', 'Forge Assessment', 'Assessment', 12400, 1850, 720, 96, 30, true],
+    ['TestTrack Benchmark', 'Trackline', 'Assessment', 18900, 1400, 1260, 250, 60, true],
+    ['VidLesson Pro', 'Lumen Media', 'Video', 7500, 140, 31, 41, 30, true],
+    ['TypeSprint', 'Homerow Inc.', 'Keyboarding', 3900, 500, 265, 160, 45, false],
+    ['LinguaBridge EL', 'Bridgeway', 'Language support', 11200, 220, 198, 300, 60, true],
+    ['SciSim Labs', 'Beaker Digital', 'Science', 8600, 450, 122, 130, 60, true],
+    ['PaperTrail Forms', 'Trailhead Software', 'Operations', 5400, 60, null, 205, 30, true],
+    ['StoryStack Library', 'Stackhouse', 'Literacy', 6300, 900, 655, 190, 30, false],
+    ['CodeSprouts', 'Sprout Labs', 'Computer science', 4800, 300, 48, 18, 30, true]
+  ].map(function (r) {
+    return { product: r[0], vendor: r[1], category: r[2], cost: r[3], licenses: r[4], active: r[5], renewal: addDays(today, r[6]), notice: r[7], auto: r[8] };
+  });
+
+  var contracts = SAMPLE, isSample = true, filter = 'all';
+  var $ = function (id) { return document.getElementById(id); };
+  var money = function (n) { return '$' + Math.round(n).toLocaleString('en-US'); };
+  var fmtDate = function (d) { return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  // ---------- analysis ----------
+  function analyze(list) {
+    var byCat = {};
+    list.forEach(function (c) { (byCat[c.category.toLowerCase()] = byCat[c.category.toLowerCase()] || []).push(c); });
+    return list.map(function (c) {
+      var a = Object.assign({}, c);
+      a.deadline = c.auto ? addDays(c.renewal, -c.notice) : c.renewal;
+      a.daysLeft = Math.round((a.deadline - today) / DAY);
+      a.locked = c.auto && a.daysLeft < 0 && c.renewal >= today;
+      a.util = (c.active == null || !c.licenses) ? null : c.active / c.licenses;
+      a.perActive = c.active ? c.cost / c.active : null;
+      a.saving = 0;
+      var rivals = (byCat[c.category.toLowerCase()] || []).filter(function (o) {
+        return o !== c && o.active != null && o.licenses && a.util != null && o.active / o.licenses > a.util;
+      });
+      if (a.util == null) { a.verdict = 'unk'; a.why = 'No usage data. Ask the vendor for an active-user report before renewing.'; }
+      else if (a.util < 0.25) { a.verdict = 'cut'; a.saving = c.cost; a.why = 'Only ' + pct(a.util) + ' of licenses were used in 90 days.'; }
+      else if (a.util < 0.40 && rivals.length) { a.verdict = 'cut'; a.saving = c.cost; a.why = pct(a.util) + ' in use, and ' + rivals[0].product + ' covers ' + c.category.toLowerCase() + ' at ' + pct(rivals[0].active / rivals[0].licenses) + '.'; }
+      else if (a.util < 0.70) {
+        var target = Math.min(c.licenses, Math.ceil(c.active * 1.15));
+        a.verdict = 'reneg'; a.target = target; a.saving = c.cost * (1 - target / c.licenses);
+        a.why = 'Right-size from ' + c.licenses.toLocaleString() + ' to ' + target.toLocaleString() + ' licenses (active users plus 15%).';
+      } else { a.verdict = 'keep'; a.why = pct(a.util) + ' of licenses in use.'; }
+      return a;
+    }).sort(function (x, y) {
+      if (x.locked !== y.locked) return x.locked ? 1 : -1;
+      return x.deadline - y.deadline;
+    });
+  }
+  function pct(u) { return Math.round(u * 100) + '%'; }
+  var LABEL = { cut: 'Cut', reneg: 'Renegotiate', keep: 'Keep', unk: 'Needs usage data' };
+
+  // ---------- render ----------
+  function render() {
+    var rows = analyze(contracts);
+    var total = rows.reduce(function (s, r) { return s + r.cost; }, 0);
+    var open = rows.filter(function (r) { return !r.locked; });
+    var locked = rows.filter(function (r) { return r.locked; });
+    var saveNow = open.reduce(function (s, r) { return s + r.saving; }, 0);
+    var saveLocked = locked.reduce(function (s, r) { return s + r.saving; }, 0);
+    var next = open.filter(function (r) { return r.daysLeft >= 0 && r.verdict !== 'keep'; })[0];
+    var enroll = Math.max(1, +$('enroll').value || 1);
+
+    $('banner').hidden = !isSample;
+    $('stats').innerHTML =
+      stat('Annual software spend', money(total), money(total / enroll) + ' per student, ' + rows.length + ' contracts') +
+      stat('Savings you can still act on', money(saveNow), total ? pct(saveNow / total) + ' of spend' : '') +
+      stat('Missed this term', money(saveLocked), locked.length + (locked.length === 1 ? ' contract' : ' contracts') + ' past the cancel-by date') +
+      stat('Next deadline that needs a decision', next ? (next.daysLeft === 0 ? 'Today' : next.daysLeft + ' days') : 'None', next ? next.product + ', ' + fmtDate(next.deadline) : 'No open cuts or renegotiations');
+
+    // month bars: contract dollars whose cancel-by date falls in each of the next 12 months
+    var buckets = [];
+    for (var i = 0; i < 12; i++) { var m = new Date(today.getFullYear(), today.getMonth() + i, 1); buckets.push({ d: m, amt: 0, n: 0 }); }
+    open.forEach(function (r) {
+      var idx = (r.deadline.getFullYear() - today.getFullYear()) * 12 + r.deadline.getMonth() - today.getMonth();
+      if (r.daysLeft >= 0 && idx >= 0 && idx < 12) { buckets[idx].amt += r.cost; buckets[idx].n++; }
+    });
+    var max = Math.max.apply(null, buckets.map(function (b) { return b.amt; })) || 1;
+    $('months').innerHTML = buckets.map(function (b, i) {
+      var h = Math.round(b.amt / max * 110);
+      return '<div class="mo' + (i === 0 ? ' now' : '') + '" title="' + b.n + ' contract(s)"><span class="amt">' + (b.amt ? '$' + (b.amt / 1000).toFixed(b.amt < 10000 ? 1 : 0) + 'k' : '') + '</span>' +
+        '<div class="bar' + (b.amt ? '' : ' none') + '"' + (b.amt ? ' style="height:' + Math.max(h, 3) + 'px"' : '') + '></div>' +
+        '<span class="lbl">' + b.d.toLocaleDateString('en-US', { month: 'short' }) + (b.d.getMonth() === 0 || i === 0 ? " '" + String(b.d.getFullYear()).slice(2) : '') + '</span></div>';
+    }).join('');
+    var busiest = buckets.slice().sort(function (a, b) { return b.amt - a.amt; })[0];
+    $('monthsNote').textContent = busiest.amt ? 'Heaviest month: ' + busiest.d.toLocaleDateString('en-US', { month: 'long' }) + ', ' + money(busiest.amt) : '';
+
+    // filters
+    var counts = { all: rows.length };
+    rows.forEach(function (r) { counts[r.verdict] = (counts[r.verdict] || 0) + 1; });
+    $('filters').innerHTML = ['all', 'cut', 'reneg', 'keep', 'unk'].filter(function (k) { return counts[k]; }).map(function (k) {
+      return '<button type="button" class="chipbtn" data-f="' + k + '" aria-pressed="' + (filter === k) + '">' + (k === 'all' ? 'All' : LABEL[k]) + ' ' + counts[k] + '</button>';
+    }).join('');
+
+    $('rows').innerHTML = rows.filter(function (r) { return filter === 'all' || r.verdict === filter; }).map(function (r) {
+      var due;
+      if (r.locked) due = '<span class="pill cut">Window closed</span><div class="why">Auto-renews ' + fmtDate(r.renewal) + '. Notice was due ' + fmtDate(r.deadline) + '.</div>';
+      else if (r.daysLeft < 0) due = '<span class="pill unk">Expired</span><div class="why">Ended ' + fmtDate(r.renewal) + '.</div>';
+      else due = '<div class="num">' + fmtDate(r.deadline) + '</div><span class="pill ' + (r.daysLeft <= 30 ? 'cut' : r.daysLeft <= 90 ? 'reneg' : 'unk') + '">' + r.daysLeft + ' days left</span>' +
+        '<div class="why">' + (r.auto ? r.notice + '-day notice before ' + fmtDate(r.renewal) + ' auto-renewal' : 'No auto-renewal. Ends ' + fmtDate(r.renewal)) + '</div>';
+      var use = r.util == null ? '<span class="muted">Unknown</span>' :
+        '<div class="use"><span class="num">' + r.active.toLocaleString() + ' of ' + r.licenses.toLocaleString() + ' (' + pct(r.util) + ')</span><div class="track"><div class="fill" style="width:' + Math.min(100, r.util * 100) + '%"></div></div></div>';
+      var rec = '<span class="pill ' + r.verdict + '">' + LABEL[r.verdict] + '</span>' +
+        (r.saving ? ' <span class="save">' + (r.locked ? 'next term ' : 'saves ') + money(r.saving) + '</span>' : '') + '<div class="why">' + esc(r.why) + '</div>';
+      return '<tr><td><div class="prod">' + esc(r.product) + '</div><div class="sub">' + esc(r.vendor) + (r.vendor && r.category ? ' · ' : '') + esc(r.category) + '</div></td>' +
+        '<td class="r num">' + money(r.cost) + '</td><td>' + use + '</td><td class="r num">' + (r.perActive == null ? '—' : '$' + r.perActive.toFixed(2)) + '</td><td>' + due + '</td><td>' + rec + '</td></tr>';
+    }).join('');
+
+    $('memo').value = memo(rows, total, saveNow, saveLocked, enroll);
+  }
+  function stat(k, v, s) { return '<div class="stat"><div class="k">' + k + '</div><div class="v">' + v + '</div><div class="s">' + esc(s) + '</div></div>'; }
+
+  function memo(rows, total, saveNow, saveLocked, enroll) {
+    var L = [];
+    var open = rows.filter(function (r) { return !r.locked && r.daysLeft >= 0; });
+    L.push('TO: Board of Education');
+    L.push('FROM: Technology Office, ' + $('district').value);
+    L.push('DATE: ' + fmtDate(today));
+    L.push('RE: Software renewal review' + (isSample ? ' (EXAMPLE DATA)' : ''));
+    L.push('');
+    L.push('The district holds ' + rows.length + ' software contracts costing ' + money(total) + ' a year (' + money(total / enroll) + ' per student). Based on license use over the last 90 days, we recommend changes that save ' + money(saveNow) + ' a year if we act before each cancel-by date below.');
+    L.push('');
+    function block(title, v, line) {
+      var set = open.filter(function (r) { return r.verdict === v; });
+      if (!set.length) return;
+      L.push(title);
+      set.forEach(function (r) { L.push('  - ' + line(r)); });
+      L.push('');
+    }
+    block('CANCEL', 'cut', function (r) { return r.product + ' (' + money(r.cost) + '). ' + r.why + ' Give notice by ' + fmtDate(r.deadline) + '.'; });
+    block('RENEGOTIATE', 'reneg', function (r) { return r.product + ': reduce ' + r.licenses.toLocaleString() + ' to ' + r.target.toLocaleString() + ' licenses, saving about ' + money(r.saving) + '. Decide by ' + fmtDate(r.deadline) + '.'; });
+    block('RENEW AS IS', 'keep', function (r) { return r.product + ' (' + money(r.cost) + '), ' + pct(r.util) + ' of licenses in use.'; });
+    block('NEED USAGE DATA BEFORE DECIDING', 'unk', function (r) { return r.product + ' (' + money(r.cost) + '). Decide by ' + fmtDate(r.deadline) + '.'; });
+    var locked = rows.filter(function (r) { return r.locked; });
+    if (locked.length) {
+      L.push('ALREADY AUTO-RENEWING (cancel-by date has passed)');
+      locked.forEach(function (r) { L.push('  - ' + r.product + ' (' + money(r.cost) + ') renews ' + fmtDate(r.renewal) + '. Recommendation for next term: ' + LABEL[r.verdict].toLowerCase() + (r.saving ? ', worth ' + money(r.saving) : '') + '.'); });
+      L.push('');
+      L.push('Missing these notice dates costs the district ' + money(saveLocked) + ' this term.');
+    }
+    return L.join('\n');
+  }
+
+  // ---------- CSV loading ----------
+  function parseCSV(text) {
+    var rows = [], row = [], cur = '', q = false;
+    text = text.replace(/^﻿/, '');
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (q) { if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === ',') { row.push(cur); cur = ''; }
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cur); cur = ''; rows.push(row); row = []; }
+      else cur += ch;
+    }
+    if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+    rows = rows.filter(function (r) { return r.some(function (c) { return c.trim() !== ''; }); });
+    if (!rows.length) return [];
+    var head = rows[0].map(function (h) { return h.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''); });
+    return rows.slice(1).map(function (r) { var o = {}; head.forEach(function (h, i) { o[h] = (r[i] || '').trim(); }); return o; });
+  }
+  function pick(o, names) { for (var i = 0; i < names.length; i++) if (o[names[i]] != null && o[names[i]] !== '') return o[names[i]]; return ''; }
+  function toNum(s) { var n = parseFloat(String(s).replace(/[$,\s]/g, '')); return isNaN(n) ? null : n; }
+  function toDate(s) {
+    var m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s); if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+    m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(s); if (m) return new Date(+m[3] < 100 ? 2000 + +m[3] : +m[3], +m[1] - 1, +m[2]);
+    var d = new Date(s); return isNaN(d) ? null : d;
+  }
+  function readFile(input, cb) {
+    var f = input.files && input.files[0]; if (!f) return;
+    var fr = new FileReader();
+    fr.onload = function () { cb(parseCSV(String(fr.result))); };
+    fr.onerror = function () { say('Could not read ' + f.name + '. Save it as a .csv file and try again.'); };
+    fr.readAsText(f);
+  }
+  function say(t) { $('status').textContent = t; }
+
+  $('contractsFile').addEventListener('change', function () {
+    readFile(this, function (recs) {
+      var good = [], skipped = 0;
+      recs.forEach(function (o) {
+        var product = pick(o, ['product', 'name', 'tool', 'application', 'app']);
+        var cost = toNum(pick(o, ['annual_cost', 'cost', 'amount', 'price', 'total']));
+        var renewal = toDate(pick(o, ['renewal_date', 'renewal', 'renews', 'end_date', 'expiration_date']));
+        if (!product || cost == null || !renewal) { skipped++; return; }
+        var auto = pick(o, ['auto_renew', 'autorenew', 'auto_renewal']).toLowerCase();
+        var notice = toNum(pick(o, ['notice_days', 'notice', 'cancellation_notice_days']));
+        good.push({ product: product, vendor: pick(o, ['vendor', 'company', 'supplier']), category: pick(o, ['category', 'subject', 'type']) || 'Uncategorized',
+          cost: cost, licenses: toNum(pick(o, ['licenses', 'seats', 'quantity', 'qty'])) || 0, active: null, renewal: renewal,
+          notice: notice == null ? 30 : notice, auto: auto === '' ? true : /^(y|yes|true|1)/.test(auto) });
+      });
+      if (!good.length) { say('No contracts found. The file needs at least these columns: product, annual_cost, renewal_date.'); return; }
+      contracts = good; isSample = false; filter = 'all';
+      say('Loaded ' + good.length + ' contracts' + (skipped ? '. Skipped ' + skipped + ' rows missing a product, cost or renewal date' : '') + '. Now load the usage file.');
+      render();
+    });
+  });
+  $('usageFile').addEventListener('change', function () {
+    readFile(this, function (recs) {
+      if (isSample) { say('Load your contracts file first, then the usage file.'); return; }
+      var map = {}, hit = 0;
+      recs.forEach(function (o) { var p = pick(o, ['product', 'name', 'tool', 'application', 'app']).toLowerCase(); var n = toNum(pick(o, ['active_users', 'active', 'users', 'unique_users'])); if (p && n != null) map[p] = n; });
+      contracts.forEach(function (c) { var n = map[c.product.toLowerCase()]; if (n != null) { c.active = n; hit++; } });
+      say('Matched usage for ' + hit + ' of ' + contracts.length + ' contracts' + (hit < contracts.length ? '. Product names must match the contracts file exactly' : '') + '.');
+      render();
+    });
+  });
+
+  $('filters').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; filter = b.dataset.f; render(); });
+  $('district').addEventListener('input', render);
+  $('enroll').addEventListener('input', render);
+  $('copyMemo').addEventListener('click', function () {
+    var t = $('memo');
+    var done = function (m) { $('copyNote').textContent = m; };
+    try { navigator.clipboard.writeText(t.value).then(function () { done('Copied'); }, function () { t.select(); done('Selected. Press Ctrl+C or Cmd+C.'); }); }
+    catch (e) { t.select(); done('Selected. Press Ctrl+C or Cmd+C.'); }
+  });
+
+  render();
+})();
+</script>
