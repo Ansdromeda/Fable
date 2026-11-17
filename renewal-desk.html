@@ -71,7 +71,7 @@ button { font: inherit; cursor: pointer; }
 .btn.ghost { background: transparent; color: var(--accent); }
 
 .tablebox { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
-table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 14px; }
+table { border-collapse: collapse; width: 100%; min-width: 1000px; font-size: 14px; }
 th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
 tr:last-child td { border-bottom: 0; }
@@ -125,10 +125,10 @@ textarea { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; fon
       <div class="filters" id="filters"></div>
     </div>
     <div class="tablebox"><table>
-      <thead><tr><th>Product</th><th class="r">Annual cost</th><th>Licenses in use</th><th class="r">Per active user</th><th>Cancel by</th><th>Recommendation</th></tr></thead>
+      <thead><tr><th>Product</th><th class="r">Annual cost</th><th>Licenses in use</th><th class="r">Per active user</th><th>Cancel by</th><th>Privacy agreement</th><th>Recommendation</th></tr></thead>
       <tbody id="rows"></tbody>
     </table></div>
-    <p class="sub">Rules: under 25% of licenses in use is a cut. A tool under 40% that shares a category with a better-used tool is a cut. 25–70% is a renegotiation down to active users plus 15% headroom. 70% and above is a keep.</p>
+    <p class="sub">Rules: under 25% of licenses in use is a cut. A tool under 40% that shares a category with a better-used tool is a cut. 25–70% is a renegotiation down to active users plus 15% headroom. 70% and above is a keep. The privacy column shows whether a signed student data privacy agreement is on file and still valid at renewal.</p>
   </section>
 
   <section>
@@ -136,8 +136,8 @@ textarea { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; fon
     <div class="load">
       <div class="drop">
         <strong>1. Contracts CSV</strong>
-        <span class="sub">One row per contract, from your purchase orders or a spreadsheet.</span>
-        <code>product, vendor, category, annual_cost, licenses, renewal_date, notice_days, auto_renew</code>
+        <span class="sub">One row per contract, from your purchase orders or a spreadsheet. privacy_agreement is signed, pending or none.</span>
+        <code>product, vendor, category, annual_cost, licenses, renewal_date, notice_days, auto_renew, privacy_agreement, privacy_expires</code>
         <input id="contractsFile" type="file" accept=".csv,text/csv">
       </div>
       <div class="drop">
@@ -167,21 +167,21 @@ textarea { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; fon
 
   // Example contracts. Renewal dates are offsets from today so the sample always has live deadlines.
   var SAMPLE = [
-    ['ReadWell Literacy', 'Brightpath Learning', 'Literacy', 28500, 900, 212, 52, 60, true],
-    ['MathOrbit', 'Orbit Education', 'Math', 21600, 1200, 1010, 75, 60, true],
-    ['NumberNest', 'Kestrel Labs', 'Math', 9800, 600, 190, 110, 90, true],
-    ['ClassCanvas LMS', 'Canvasworks', 'Learning management', 34000, 1850, 1702, 228, 90, true],
-    ['QuizForge', 'Forge Assessment', 'Assessment', 12400, 1850, 720, 96, 30, true],
-    ['TestTrack Benchmark', 'Trackline', 'Assessment', 18900, 1400, 1260, 250, 60, true],
-    ['VidLesson Pro', 'Lumen Media', 'Video', 7500, 140, 31, 41, 30, true],
-    ['TypeSprint', 'Homerow Inc.', 'Keyboarding', 3900, 500, 265, 160, 45, false],
-    ['LinguaBridge EL', 'Bridgeway', 'Language support', 11200, 220, 198, 300, 60, true],
-    ['SciSim Labs', 'Beaker Digital', 'Science', 8600, 450, 122, 130, 60, true],
-    ['PaperTrail Forms', 'Trailhead Software', 'Operations', 5400, 60, null, 205, 30, true],
-    ['StoryStack Library', 'Stackhouse', 'Literacy', 6300, 900, 655, 190, 30, false],
-    ['CodeSprouts', 'Sprout Labs', 'Computer science', 4800, 300, 48, 18, 30, true]
+    ['ReadWell Literacy', 'Brightpath Learning', 'Literacy', 28500, 900, 212, 52, 60, true, 'signed', 400],
+    ['MathOrbit', 'Orbit Education', 'Math', 21600, 1200, 1010, 75, 60, true, 'signed', 40],
+    ['NumberNest', 'Kestrel Labs', 'Math', 9800, 600, 190, 110, 90, true, 'none', null],
+    ['ClassCanvas LMS', 'Canvasworks', 'Learning management', 34000, 1850, 1702, 228, 90, true, 'signed', 500],
+    ['QuizForge', 'Forge Assessment', 'Assessment', 12400, 1850, 720, 96, 30, true, 'signed', 300],
+    ['TestTrack Benchmark', 'Trackline', 'Assessment', 18900, 1400, 1260, 250, 60, true, 'signed', 600],
+    ['VidLesson Pro', 'Lumen Media', 'Video', 7500, 140, 31, 41, 30, true, 'none', null],
+    ['TypeSprint', 'Homerow Inc.', 'Keyboarding', 3900, 500, 265, 160, 45, false, 'signed', 200],
+    ['LinguaBridge EL', 'Bridgeway', 'Language support', 11200, 220, 198, 300, 60, true, 'pending', null],
+    ['SciSim Labs', 'Beaker Digital', 'Science', 8600, 450, 122, 130, 60, true, 'signed', 365],
+    ['PaperTrail Forms', 'Trailhead Software', 'Operations', 5400, 60, null, 205, 30, true, '', null],
+    ['StoryStack Library', 'Stackhouse', 'Literacy', 6300, 900, 655, 190, 30, false, 'signed', -30],
+    ['CodeSprouts', 'Sprout Labs', 'Computer science', 4800, 300, 48, 18, 30, true, 'none', null]
   ].map(function (r) {
-    return { product: r[0], vendor: r[1], category: r[2], cost: r[3], licenses: r[4], active: r[5], renewal: addDays(today, r[6]), notice: r[7], auto: r[8] };
+    return { product: r[0], vendor: r[1], category: r[2], cost: r[3], licenses: r[4], active: r[5], renewal: addDays(today, r[6]), notice: r[7], auto: r[8], dpa: r[9], dpaExp: r[10] == null ? null : addDays(today, r[10]) };
   });
 
   var contracts = SAMPLE, isSample = true, filter = 'all';
@@ -202,6 +202,11 @@ textarea { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; fon
       a.util = (c.active == null || !c.licenses) ? null : c.active / c.licenses;
       a.perActive = c.active ? c.cost / c.active : null;
       a.saving = 0;
+      var p = (c.dpa || '').toLowerCase().trim();
+      if (/^(signed|yes|y|true|on file|active)$/.test(p)) a.pstat = c.dpaExp && c.dpaExp < today ? 'expired' : c.dpaExp && c.dpaExp < c.renewal ? 'lapse' : 'ok';
+      else if (/^(pending|in progress|sent|requested)$/.test(p)) a.pstat = 'pending';
+      else if (/^(none|no|n|false|missing)$/.test(p)) a.pstat = 'none';
+      else a.pstat = 'unk';
       var rivals = (byCat[c.category.toLowerCase()] || []).filter(function (o) {
         return o !== c && o.active != null && o.licenses && a.util != null && o.active / o.licenses > a.util;
       });
@@ -220,6 +225,8 @@ textarea { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; fon
     });
   }
   function pct(u) { return Math.round(u * 100) + '%'; }
+  var PLABEL = { ok: 'Signed', lapse: 'Lapses before renewal', expired: 'Expired', pending: 'Pending', none: 'None on file', unk: 'Not recorded' };
+  var PCLASS = { ok: 'keep', lapse: 'reneg', expired: 'cut', pending: 'reneg', none: 'cut', unk: 'unk' };
   var LABEL = { cut: 'Cut', reneg: 'Renegotiate', keep: 'Keep', unk: 'Needs usage data' };
 
   // ---------- render ----------
@@ -235,7 +242,7 @@ textarea { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; fon
 
     $('banner').hidden = !isSample;
     $('stats').innerHTML =
-      stat('Annual software spend', money(total), money(total / enroll) + ' per student, ' + rows.length + ' contracts') +
+      stat('Annual software spend', money(total), money(total / enroll) + ' per student, ' + rows.length + ' contracts, ' + rows.filter(function (r) { return r.pstat !== 'ok'; }).length + ' with privacy gaps') +
       stat('Savings you can still act on', money(saveNow), total ? pct(saveNow / total) + ' of spend' : '') +
       stat('Missed this term', money(saveLocked), locked.length + (locked.length === 1 ? ' contract' : ' contracts') + ' past the cancel-by date') +
       stat('Next deadline that needs a decision', next ? (next.daysLeft === 0 ? 'Today' : next.daysLeft + ' days') : 'None', next ? next.product + ', ' + fmtDate(next.deadline) : 'No open cuts or renegotiations');
@@ -259,12 +266,12 @@ textarea { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; fon
 
     // filters
     var counts = { all: rows.length };
-    rows.forEach(function (r) { counts[r.verdict] = (counts[r.verdict] || 0) + 1; });
-    $('filters').innerHTML = ['all', 'cut', 'reneg', 'keep', 'unk'].filter(function (k) { return counts[k]; }).map(function (k) {
-      return '<button type="button" class="chipbtn" data-f="' + k + '" aria-pressed="' + (filter === k) + '">' + (k === 'all' ? 'All' : LABEL[k]) + ' ' + counts[k] + '</button>';
+    rows.forEach(function (r) { counts[r.verdict] = (counts[r.verdict] || 0) + 1; if (r.pstat !== 'ok') counts.priv = (counts.priv || 0) + 1; });
+    $('filters').innerHTML = ['all', 'cut', 'reneg', 'keep', 'unk', 'priv'].filter(function (k) { return counts[k]; }).map(function (k) {
+      return '<button type="button" class="chipbtn" data-f="' + k + '" aria-pressed="' + (filter === k) + '">' + (k === 'all' ? 'All' : k === 'priv' ? 'Privacy gaps' : LABEL[k]) + ' ' + counts[k] + '</button>';
     }).join('');
 
-    $('rows').innerHTML = rows.filter(function (r) { return filter === 'all' || r.verdict === filter; }).map(function (r) {
+    $('rows').innerHTML = rows.filter(function (r) { return filter === 'all' || r.verdict === filter || (filter === 'priv' && r.pstat !== 'ok'); }).map(function (r) {
       var due;
       if (r.locked) due = '<span class="pill cut">Window closed</span><div class="why">Auto-renews ' + fmtDate(r.renewal) + '. Notice was due ' + fmtDate(r.deadline) + '.</div>';
       else if (r.daysLeft < 0) due = '<span class="pill unk">Expired</span><div class="why">Ended ' + fmtDate(r.renewal) + '.</div>';
@@ -274,8 +281,10 @@ textarea { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; fon
         '<div class="use"><span class="num">' + r.active.toLocaleString() + ' of ' + r.licenses.toLocaleString() + ' (' + pct(r.util) + ')</span><div class="track"><div class="fill" style="width:' + Math.min(100, r.util * 100) + '%"></div></div></div>';
       var rec = '<span class="pill ' + r.verdict + '">' + LABEL[r.verdict] + '</span>' +
         (r.saving ? ' <span class="save">' + (r.locked ? 'next term ' : 'saves ') + money(r.saving) + '</span>' : '') + '<div class="why">' + esc(r.why) + '</div>';
+      var pnote = r.pstat === 'lapse' ? 'Ends ' + fmtDate(r.dpaExp) + ', before the renewal.' : r.pstat === 'expired' ? 'Ended ' + fmtDate(r.dpaExp) + '.' : r.pstat === 'ok' && r.dpaExp ? 'Through ' + fmtDate(r.dpaExp) + '.' : '';
+      var priv = '<span class="pill ' + PCLASS[r.pstat] + '">' + PLABEL[r.pstat] + '</span>' + (pnote ? '<div class="why">' + pnote + '</div>' : '');
       return '<tr><td><div class="prod">' + esc(r.product) + '</div><div class="sub">' + esc(r.vendor) + (r.vendor && r.category ? ' · ' : '') + esc(r.category) + '</div></td>' +
-        '<td class="r num">' + money(r.cost) + '</td><td>' + use + '</td><td class="r num">' + (r.perActive == null ? '—' : '$' + r.perActive.toFixed(2)) + '</td><td>' + due + '</td><td>' + rec + '</td></tr>';
+        '<td class="r num">' + money(r.cost) + '</td><td>' + use + '</td><td class="r num">' + (r.perActive == null ? '—' : '$' + r.perActive.toFixed(2)) + '</td><td>' + due + '</td><td>' + priv + '</td><td>' + rec + '</td></tr>';
     }).join('');
 
     $('memo').value = memo(rows, total, saveNow, saveLocked, enroll);
@@ -303,6 +312,12 @@ textarea { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; fon
     block('RENEGOTIATE', 'reneg', function (r) { return r.product + ': reduce ' + r.licenses.toLocaleString() + ' to ' + r.target.toLocaleString() + ' licenses, saving about ' + money(r.saving) + '. Decide by ' + fmtDate(r.deadline) + '.'; });
     block('RENEW AS IS', 'keep', function (r) { return r.product + ' (' + money(r.cost) + '), ' + pct(r.util) + ' of licenses in use.'; });
     block('NEED USAGE DATA BEFORE DECIDING', 'unk', function (r) { return r.product + ' (' + money(r.cost) + '). Decide by ' + fmtDate(r.deadline) + '.'; });
+    var gaps = rows.filter(function (r) { return r.pstat !== 'ok' && r.verdict !== 'cut'; });
+    if (gaps.length) {
+      L.push('STUDENT DATA PRIVACY AGREEMENTS TO FIX BEFORE RENEWAL');
+      gaps.forEach(function (r) { L.push('  - ' + r.product + ': ' + PLABEL[r.pstat].toLowerCase() + (r.dpaExp && r.pstat !== 'unk' ? ' (' + fmtDate(r.dpaExp) + ')' : '') + '. Renews ' + fmtDate(r.renewal) + '.'); });
+      L.push('');
+    }
     var locked = rows.filter(function (r) { return r.locked; });
     if (locked.length) {
       L.push('ALREADY AUTO-RENEWING (cancel-by date has passed)');
@@ -359,7 +374,8 @@ textarea { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; fon
         var notice = toNum(pick(o, ['notice_days', 'notice', 'cancellation_notice_days']));
         good.push({ product: product, vendor: pick(o, ['vendor', 'company', 'supplier']), category: pick(o, ['category', 'subject', 'type']) || 'Uncategorized',
           cost: cost, licenses: toNum(pick(o, ['licenses', 'seats', 'quantity', 'qty'])) || 0, active: null, renewal: renewal,
-          notice: notice == null ? 30 : notice, auto: auto === '' ? true : /^(y|yes|true|1)/.test(auto) });
+          notice: notice == null ? 30 : notice, auto: auto === '' ? true : /^(y|yes|true|1)/.test(auto),
+          dpa: pick(o, ['privacy_agreement', 'dpa', 'data_privacy_agreement', 'privacy']), dpaExp: toDate(pick(o, ['privacy_expires', 'dpa_expires', 'privacy_agreement_expires'])) || null });
       });
       if (!good.length) { say('No contracts found. The file needs at least these columns: product, annual_cost, renewal_date.'); return; }
       contracts = good; isSample = false; filter = 'all';
