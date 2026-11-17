@@ -1,0 +1,138 @@
+<title>Paid Late</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: form on the left, what you are owed and the letter on the right; stacks on phones. */
+:root { --bg:#f3f5f2; --surface:#fff; --ink:#15201a; --muted:#5b665f; --line:#d7ddd8; --accent:#0d5c63; --accent-ink:#fff; --owed:#a3341f; --owed-bg:#fbeae5;
+  --display:"Space Grotesk","Segoe UI",system-ui,sans-serif; --body:"Inter","Segoe UI",system-ui,sans-serif; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#101614; --surface:#18211d; --ink:#e6ece8; --muted:#9aa8a0; --line:#2b3832; --accent:#6fc7cf; --accent-ink:#0c1513; --owed:#ffa48f; --owed-bg:#43211a; color-scheme:dark } }
+:root[data-theme="dark"] { --bg:#101614; --surface:#18211d; --ink:#e6ece8; --muted:#9aa8a0; --line:#2b3832; --accent:#6fc7cf; --accent-ink:#0c1513; --owed:#ffa48f; --owed-bg:#43211a; color-scheme:dark }
+body { background:var(--bg); color:var(--ink); font-family:var(--body); font-size:15px; line-height:1.5; }
+.wrap { max-width:1080px; margin:0 auto; padding-block:28px 56px; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); display:flex; flex-direction:column; gap:24px; }
+h1,h2 { font-family:var(--display); font-weight:600; margin:0; text-wrap:balance; } h1 { font-size:30px; } h2 { font-size:18px; }
+p { margin:0; } .muted { color:var(--muted); } .small { font-size:13px; }
+.grid { display:grid; grid-template-columns:minmax(0,340px) minmax(0,1fr); gap:24px; align-items:start; }
+@media (max-width:760px) { .grid { grid-template-columns:minmax(0,1fr); } }
+.panel { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:18px; display:flex; flex-direction:column; gap:14px; min-width:0; }
+label { display:flex; flex-direction:column; gap:4px; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+input, select { font:inherit; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:8px 10px; width:100%; box-sizing:border-box; text-transform:none; letter-spacing:0; }
+.two { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.right { display:flex; flex-direction:column; gap:24px; min-width:0; }
+.owed { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); border:1px solid var(--line); border-radius:10px; background:var(--surface); }
+.cell { padding:14px 16px; border-right:1px solid var(--line); min-width:0; } .cell:last-child { border-right:0; background:var(--owed-bg); border-radius:0 10px 10px 0; }
+@media (max-width:620px) { .cell { border-right:0; border-bottom:1px solid var(--line); } .cell:last-child { border-bottom:0; border-radius:0 0 10px 10px; } }
+.k { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.v { font-family:var(--display); font-size:24px; font-weight:600; font-variant-numeric:tabular-nums; } .cell:last-child .v { color:var(--owed); }
+.tabs { display:flex; flex-wrap:wrap; gap:6px; }
+button { font:inherit; cursor:pointer; }
+.tab { border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:999px; padding:5px 13px; font-size:13px; }
+.tab[aria-pressed="true"] { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+.btn { border:1px solid var(--accent); background:var(--accent); color:var(--accent-ink); border-radius:6px; padding:7px 14px; font-weight:500; }
+textarea { font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:13px; line-height:1.55; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:14px; width:100%; box-sizing:border-box; min-height:330px; resize:vertical; }
+.row { display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center; }
+.note { border:1px dashed var(--line); border-radius:6px; padding:8px 12px; font-size:13px; color:var(--muted); }
+</style>
+<div class="wrap">
+  <header><h1>Paid Late</h1><p class="muted">Work out what an overdue invoice now owes you in interest and fees, and get the letter that asks for it.</p></header>
+  <div class="note" id="note">The form is filled with an example invoice. Change any field to use your own. Nothing leaves this page.</div>
+  <div class="grid">
+    <form class="panel" id="f" autocomplete="off">
+      <label for="me">Your name or business<input id="me" value="Dana Reyes Design"></label>
+      <label for="client">Client<input id="client" value="Northgate Retail Ltd"></label>
+      <div class="two">
+        <label for="inv">Invoice number<input id="inv" value="INV-0142"></label>
+        <label for="amt">Amount<input id="amt" type="number" min="0" step="0.01" value="2400"></label>
+      </div>
+      <div class="two">
+        <label for="due">Due date<input id="due" type="date"></label>
+        <label for="cur">Currency<select id="cur"><option>GBP</option><option>EUR</option><option>USD</option><option>CAD</option><option>AUD</option><option>INR</option></select></label>
+      </div>
+      <label for="law">Rules that apply<select id="law">
+        <option value="uk">United Kingdom, business client</option>
+        <option value="eu">EU country, business client</option>
+        <option value="contract">Anywhere else: rate in my contract</option></select></label>
+      <label for="rate"><span id="rateLbl"></span><input id="rate" type="number" min="0" step="0.05" value="4"></label>
+      <p class="small muted" id="rateHelp"></p>
+    </form>
+    <div class="right">
+      <div class="owed" id="owed"></div>
+      <section class="panel">
+        <div class="row"><h2>Letter to send</h2><div class="tabs" id="tabs"></div></div>
+        <textarea id="letter" readonly aria-label="Letter text"></textarea>
+        <div class="row"><span class="small muted" id="hint"></span><span class="row"><span class="small muted" id="copied"></span><button class="btn" type="button" id="copy">Copy letter</button></span></div>
+      </section>
+      <p class="small muted">An estimate using simple daily interest, not legal advice. Statutory rules cover business clients, not consumers. Check the current reference rate and your contract before sending.</p>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var DAY = 86400000, today = new Date(); today.setHours(0,0,0,0);
+  var d0 = new Date(today.getTime() - 47 * DAY);
+  $('due').value = d0.getFullYear() + '-' + String(d0.getMonth()+1).padStart(2,'0') + '-' + String(d0.getDate()).padStart(2,'0');
+  var stage = null, touched = false;
+  var STAGES = ['Friendly reminder', 'Firm notice', 'Final notice'];
+  function fmt(n) { try { return new Intl.NumberFormat('en', { style:'currency', currency:$('cur').value }).format(n); } catch (e) { return n.toFixed(2) + ' ' + $('cur').value; } }
+  function dstr(d) { return d.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }); }
+
+  function calc() {
+    var amt = Math.max(0, parseFloat($('amt').value) || 0), law = $('law').value, r = Math.max(0, parseFloat($('rate').value) || 0);
+    var p = $('due').value.split('-'), due = p.length === 3 ? new Date(+p[0], +p[1]-1, +p[2]) : today;
+    var days = Math.max(0, Math.round((today - due) / DAY));
+    var annual = law === 'contract' ? r : r + 8;            // UK and EU: reference rate plus 8 points
+    var fee = 0, feeWhy = '';
+    if (days > 0 && law === 'uk') { fee = amt < 1000 ? 40 : amt < 10000 ? 70 : 100; feeWhy = 'fixed compensation under the Late Payment of Commercial Debts (Interest) Act 1998'; }
+    if (days > 0 && law === 'eu') { fee = 40; feeWhy = 'fixed recovery costs under Directive 2011/7/EU'; }
+    var interest = amt * annual / 100 * days / 365;
+    return { amt:amt, law:law, due:due, days:days, annual:annual, fee:fee, feeWhy:feeWhy, interest:interest, daily:amt * annual / 100 / 365, total:amt + interest + fee };
+  }
+
+  function letter(c, s) {
+    var me = $('me').value || 'Your name', cl = $('client').value || 'Client', inv = $('inv').value || 'the invoice';
+    var basis = c.law === 'uk' ? 'the Late Payment of Commercial Debts (Interest) Act 1998' : c.law === 'eu' ? 'Directive 2011/7/EU on late payment, as applied in national law' : 'our agreed payment terms';
+    var pay = new Date(today.getTime() + 7 * DAY), L = [];
+    L.push('Subject: ' + (s === 0 ? 'Reminder: ' : s === 1 ? 'Overdue: ' : 'Final notice: ') + 'invoice ' + inv + ', ' + fmt(c.amt) + (c.days ? ', ' + c.days + ' days overdue' : ''), '', 'Hello ' + cl + ',', '');
+    if (s === 0) {
+      L.push('Invoice ' + inv + ' for ' + fmt(c.amt) + ' was due on ' + dstr(c.due) + ' and I have not received payment yet. It may simply have been missed.', '',
+        'Could you pay it by ' + dstr(pay) + ', or let me know the date it is scheduled for?', '',
+        'For reference, ' + basis + ' allow' + (c.law === 'contract' ? '' : 's') + ' me to add interest at ' + c.annual.toFixed(2) + '% a year on overdue invoices. I have not added it to this reminder.');
+    } else {
+      L.push('Invoice ' + inv + ' for ' + fmt(c.amt) + ' was due on ' + dstr(c.due) + ' and is now ' + c.days + ' days overdue.', '',
+        'Under ' + basis + ', I am claiming the following:', '',
+        '  Invoice amount:        ' + fmt(c.amt),
+        '  Interest to date:      ' + fmt(c.interest) + '  (' + c.annual.toFixed(2) + '% a year for ' + c.days + ' days)');
+      if (c.fee) L.push('  Fixed compensation:    ' + fmt(c.fee));
+      L.push('  Total now due:         ' + fmt(c.total), '', 'Interest continues at ' + fmt(c.daily) + ' for each further day the invoice is unpaid.', '');
+      if (s === 1) L.push('Please pay the total by ' + dstr(pay) + '. If there is a problem with the invoice, tell me now so we can resolve it.');
+      else L.push('This is my final request. If the total is not paid by ' + dstr(pay) + ', I will start formal recovery, which may include a court claim or a debt recovery agent, and will add those costs to the amount owed.');
+    }
+    L.push('', 'Thank you,', me);
+    return L.join('\n');
+  }
+
+  function render() {
+    var c = calc(), law = c.law;
+    $('rateLbl').textContent = law === 'uk' ? 'Bank of England base rate, %' : law === 'eu' ? 'ECB reference rate, %' : 'Annual late interest in your contract, %';
+    $('rateHelp').textContent = law === 'contract' ? 'Use the rate written in your contract or invoice terms. No fixed fee is added.' : 'Statutory interest is this rate plus 8 points. Enter today’s published rate; the 4 shown is a placeholder.';
+    if (law !== 'contract' && !touched) $('cur').value = law === 'uk' ? 'GBP' : 'EUR';
+    $('note').hidden = touched;
+    var cell = function (k, v, s) { return '<div class="cell"><div class="k">' + k + '</div><div class="v">' + v + '</div><div class="small muted">' + s + '</div></div>'; };
+    $('owed').innerHTML = cell('Days overdue', c.days, 'since ' + dstr(c.due)) + cell('Interest so far', fmt(c.interest), c.annual.toFixed(2) + '% a year, ' + fmt(c.daily) + ' a day') +
+      cell('Fixed fee', fmt(c.fee), c.fee ? 'statutory compensation' : 'none applies') + cell('Total you can claim', fmt(c.total), fmt(c.total - c.amt) + ' above the invoice');
+    var suggested = c.days <= 14 ? 0 : c.days <= 30 ? 1 : 2, s = stage == null ? suggested : stage;
+    $('tabs').innerHTML = STAGES.map(function (t, i) { return '<button type="button" class="tab" data-s="' + i + '" aria-pressed="' + (i === s) + '">' + t + '</button>'; }).join('');
+    $('hint').textContent = c.days === 0 ? 'This invoice is not overdue yet.' : 'Suggested for ' + c.days + ' days overdue: ' + STAGES[suggested].toLowerCase() + '.';
+    $('letter').value = letter(c, s);
+  }
+  $('f').addEventListener('input', function (e) { if (e.target.id !== 'law') touched = true; $('copied').textContent = ''; render(); });
+  $('f').addEventListener('submit', function (e) { e.preventDefault(); });
+  $('tabs').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; stage = +b.dataset.s; render(); });
+  $('copy').addEventListener('click', function () {
+    var t = $('letter'), ok = function (m) { $('copied').textContent = m; };
+    try { navigator.clipboard.writeText(t.value).then(function () { ok('Copied'); }, function () { t.select(); ok('Selected. Press Ctrl+C or Cmd+C.'); }); } catch (e) { t.select(); ok('Selected. Press Ctrl+C or Cmd+C.'); }
+  });
+  render();
+})();
+</script>
